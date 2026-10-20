@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student API Interface</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #eaf5ff;
+            color: #183b56;
+        }
+
+        header {
+            text-align: center;
+            background: #1769aa;
+            color: #ffffff;
+            padding: 25px 15px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 12px rgba(23, 105, 170, 0.15);
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        .card {
+            background: #d7ebff;
+            border: 1px solid #a7d0f5;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(24, 59, 86, 0.06);
+        }
+
+        h2 {
+            color: #145da0;
+            margin-top: 0;
+        }
+
+        button {
+            display: inline-block;
+            background: #1976d2;
+            color: #ffffff;
+            border: none;
+            padding: 11px 16px;
+            margin-top: 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #0d47a1;
+        }
+
+        button:focus,
+        input:focus {
+            outline: 2px solid #64b5f6;
+            outline-offset: 2px;
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            max-width: 350px;
+            padding: 11px;
+            border: 1px solid #8bbce8;
+            border-radius: 7px;
+            font-size: 15px;
+            background: #f8fcff;
+            color: #183b56;
+        }
+
+        .result {
+            margin-top: 18px;
+            padding: 14px;
+            background: #eff8ff;
+            border: 1px solid #b8dafa;
+            border-radius: 8px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .result:empty {
+            display: none;
+        }
+
+        .result p {
+            margin: 5px 0;
+        }
+
+        footer {
+            text-align: center;
+            color: #456b89;
+            font-size: 13px;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                margin: 10px auto;
+                padding: 14px;
+            }
+
+            header {
+                padding: 20px 12px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            input,
+            button {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Student API Interface</h1>
+    </header>
+
+    <!-- STUDENT INFORMATION -->
+    <section class="card">
+        <h2>Student Information</h2>
+
+        <button type="button" onclick="loadStudent()">
+            Load Student Information
+        </button>
+
+        <div id="result" class="result" aria-live="polite"></div>
+    </section>
+
+    <!-- GREETING API -->
+    <section class="card">
+        <h2>Greeting API</h2>
+
+        <input
+            type="text"
+            id="nameInput"
+            placeholder="Enter your first name"
+            aria-label="Your first name"
+        >
+
+        <button type="button" onclick="sayHello()">
+            Say Hello
+        </button>
+
+        <div id="greeting" class="result" aria-live="polite"></div>
+    </section>
+
+    <!-- CAMPUS INFORMATION API -->
+    <section class="card">
+        <h2>Campus Information API</h2>
+
+        <button type="button" onclick="loadCampus()">
+            Load Campus Information
+        </button>
+
+        <div id="campusResult" class="result" aria-live="polite"></div>
+    </section>
+
+    <footer>
+        <p>Laboratory Activity 6 Miranda | Building a Simple Web Interface Flask API</p>
+    </footer>
+
+    <script>
+        // ==========================================
+        // STUDENT INFORMATION API
+        // ==========================================
+        async function loadStudent() {
+            const result = document.getElementById("result");
+
+            result.textContent = "Loading...";
+
+            try {
+                const response = await fetch("/student");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load student information.");
+                }
+
+                const data = await response.json();
+
+                result.replaceChildren();
+
+                const fields = [
+                    ["Student ID", data.student_id],
+                    ["Name", data.name],
+                    ["Program", data.program],
+                    ["Year", data.year],
+                    ["Section", data.section]
+                ];
+
+                fields.forEach(([label, value]) => {
+                    const paragraph = document.createElement("p");
+                    const strong = document.createElement("strong");
+
+                    strong.textContent = label + ": ";
+                    paragraph.appendChild(strong);
+
+                    paragraph.appendChild(
+                        document.createTextNode(
+                            value === undefined || value === null
+                                ? "Not available"
+                                : String(value)
+                        )
+                    );
+
+                    result.appendChild(paragraph);
+                });
+
+            } catch (error) {
+                result.textContent =
+                    "Unable to load student information. Please try again.";
+
+                console.error("Student API error:", error);
+            }
+        }
+
+        // ==========================================
+        // GREETING API
+        // ==========================================
+        async function sayHello() {
+            const nameInput = document.getElementById("nameInput");
+            const greeting = document.getElementById("greeting");
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                greeting.textContent = "Please enter your first name.";
+                nameInput.focus();
+                return;
+            }
+
+            greeting.textContent = "Loading...";
+
+            try {
+                const response = await fetch(
+                    "/hello?name=" + encodeURIComponent(name)
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to load greeting.");
+                }
+
+                const data = await response.json();
+
+                greeting.textContent = data.message || "Greeting received.";
+
+            } catch (error) {
+                greeting.textContent =
+                    "Unable to load greeting. Please try again.";
+
+                console.error("Greeting API error:", error);
+            }
+        }
+
+        // Allow Enter key to submit a greeting.
+        document.getElementById("nameInput").addEventListener(
+            "keydown",
+            function (event) {
+                if (event.key === "Enter") {
+                    sayHello();
+                }
+            }
+        );
+
+        // ==========================================
+        // CAMPUS INFORMATION API
+        // ==========================================
+        async function loadCampus() {
+            const campusResult = document.getElementById("campusResult");
+
+            campusResult.textContent = "Loading...";
+
+            try {
+                const response = await fetch("/campus");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load campus information.");
+                }
+
+                const data = await response.json();
+
+                campusResult.replaceChildren();
+
+                const fields = [
+                    ["Campus", data.campus],
+                    ["Location", data.location],
+                    ["Status", data.status],
+                    ["Type", data.type]
+                ];
+
+                fields.forEach(([label, value]) => {
+                    const paragraph = document.createElement("p");
+                    const strong = document.createElement("strong");
+
+                    strong.textContent = label + ": ";
+                    paragraph.appendChild(strong);
+
+                    paragraph.appendChild(
+                        document.createTextNode(
+                            value === undefined || value === null
+                                ? "Not available"
+                                : String(value)
+                        )
+                    );
+
+                    campusResult.appendChild(paragraph);
+                });
+
+            } catch (error) {
+                campusResult.textContent =
+                    "Unable to load campus information. Please try again.";
+
+                console.error("Campus API error:", error);
+            }
+        }
+    </script>
+
+</body>
+</html>
