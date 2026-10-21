@@ -371,11 +371,11 @@
 
                 data.forEach(student => {
                     const paragraph = document.createElement("p");
-
                     const strong = document.createElement("strong");
-                    strong.textContent = student.student_id;
 
+                    strong.textContent = student.student_id;
                     paragraph.appendChild(strong);
+
                     paragraph.appendChild(
                         document.createTextNode(
                             " - " + student.name +
