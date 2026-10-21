@@ -27,6 +27,7 @@ students = [
     ("2024-1004", "Issa Kailah Javier", "BSHM", 3, "C"),
     ("2024-1005", "Rizza Anthea Malacad", "BSED-Filipino", 4, "B"),
 ]
+
 cursor.executemany(
     """
     INSERT INTO students (student_id, name, program, year, section)
