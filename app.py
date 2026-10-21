@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request, render_template
 app = Flask(__name__)
 
 
-# Database connection
+# DATABASE CONNECTION
 def get_db_connection():
     database_path = Path(__file__).with_name("students.db")
     conn = sqlite3.connect(database_path)
@@ -13,13 +13,13 @@ def get_db_connection():
     return conn
 
 
-# Home page
+# HOME PAGE
 @app.route('/')
 def home():
     return render_template('index.html')
 
 
-# Get one sample student
+# SINGLE STUDENT ENDPOINT
 @app.route('/student')
 def get_student():
     return jsonify({
@@ -31,7 +31,7 @@ def get_student():
     })
 
 
-# Hello endpoint
+# HELLO ENDPOINT
 @app.route('/hello')
 def say_hello():
     name = request.args.get('name', 'Student')
@@ -40,7 +40,7 @@ def say_hello():
     })
 
 
-# Campus endpoint
+# CAMPUS ENDPOINT
 @app.route('/campus')
 def get_campus():
     return jsonify({
@@ -51,7 +51,7 @@ def get_campus():
     })
 
 
-# Grade endpoint
+# GRADE ENDPOINT
 @app.route('/grade')
 def get_grade():
     return jsonify({
@@ -61,57 +61,60 @@ def get_grade():
     })
 
 
-# Get all students from the database
+# GET ALL STUDENTS
 @app.route('/students')
 def get_students():
     conn = get_db_connection()
 
-    students = conn.execute(
-        'SELECT * FROM students'
-    ).fetchall()
+    try:
+        students = conn.execute(
+            'SELECT * FROM students'
+        ).fetchall()
 
-    conn.close()
+        return jsonify([dict(student) for student in students])
+    finally:
+        conn.close()
 
-    return jsonify([dict(student) for student in students])
 
-
-# Get one student by ID
+# GET STUDENT BY ID
 @app.route('/students/<int:id>')
 def get_student_by_id(id):
     conn = get_db_connection()
 
-    student = conn.execute(
-        'SELECT * FROM students WHERE id = ?',
-        (id,)
-    ).fetchone()
+    try:
+        student = conn.execute(
+            'SELECT * FROM students WHERE id = ?',
+            (id,)
+        ).fetchone()
 
-    conn.close()
+        if student is None:
+            return jsonify({
+                "error": "Student not found"
+            }), 404
 
-    if student is None:
-        return jsonify({
-            "error": "Student not found"
-        }), 404
-
-    return jsonify(dict(student))
+        return jsonify(dict(student))
+    finally:
+        conn.close()
 
 
-# Get students by section
-# Accepts uppercase or lowercase section requests
+# GET STUDENTS BY SECTION
+# Supports uppercase and lowercase section requests
 @app.route('/students/section/<section>')
 def get_students_by_section(section):
     conn = get_db_connection()
 
-    students = conn.execute(
-        'SELECT * FROM students WHERE section = ?',
-        (section.upper(),)
-    ).fetchall()
+    try:
+        students = conn.execute(
+            'SELECT * FROM students WHERE UPPER(section) = ?',
+            (section.upper(),)
+        ).fetchall()
 
-    conn.close()
+        return jsonify([dict(student) for student in students])
+    finally:
+        conn.close()
 
-    return jsonify([dict(student) for student in students])
 
-
-# Run Flask application
+# RUN FLASK APPLICATION
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
