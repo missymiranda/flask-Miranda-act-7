@@ -177,6 +177,17 @@
         <div id="campusResult" class="result" aria-live="polite"></div>
     </section>
 
+    <!-- STUDENTS FROM DATABASE -->
+    <section class="card">
+        <h2>Students from Database</h2>
+
+        <button type="button" onclick="loadStudents()">
+            Load Students
+        </button>
+
+        <div id="studentList" class="result" aria-live="polite"></div>
+    </section>
+
     <footer>
         <p>Laboratory Activity 6 Miranda | Building a Simple Web Interface Flask API</p>
     </footer>
@@ -331,6 +342,57 @@
                     "Unable to load campus information. Please try again.";
 
                 console.error("Campus API error:", error);
+            }
+        }
+
+        // ==========================================
+        // STUDENTS FROM SQLITE DATABASE
+        // ==========================================
+        async function loadStudents() {
+            const studentList = document.getElementById("studentList");
+
+            studentList.textContent = "Loading student records...";
+
+            try {
+                const response = await fetch("/students");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load student records.");
+                }
+
+                const data = await response.json();
+
+                studentList.replaceChildren();
+
+                if (data.length === 0) {
+                    studentList.textContent = "No student records found.";
+                    return;
+                }
+
+                data.forEach(student => {
+                    const paragraph = document.createElement("p");
+
+                    const strong = document.createElement("strong");
+                    strong.textContent = student.student_id;
+
+                    paragraph.appendChild(strong);
+                    paragraph.appendChild(
+                        document.createTextNode(
+                            " - " + student.name +
+                            " | " + student.program +
+                            " | Year " + student.year +
+                            " | Section " + student.section
+                        )
+                    );
+
+                    studentList.appendChild(paragraph);
+                });
+
+            } catch (error) {
+                studentList.textContent =
+                    "Unable to retrieve student records.";
+
+                console.error("Database API error:", error);
             }
         }
     </script>
