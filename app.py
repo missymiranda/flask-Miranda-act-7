@@ -1,6 +1,16 @@
+import sqlite3
+from pathlib import Path
 from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
+
+
+# Database connection
+def get_db_connection():
+    database_path = Path(__file__).with_name("students.db")
+    conn = sqlite3.connect(database_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 # Home page
@@ -49,6 +59,47 @@ def get_grade():
         "grade": 95,
         "remarks": "Passed"
     })
+
+
+# Get all students from the database
+@app.route('/students')
+def get_students():
+    conn = get_db_connection()
+    students = conn.execute(
+        'SELECT * FROM students'
+    ).fetchall()
+    conn.close()
+
+    return jsonify([dict(student) for student in students])
+
+
+# Get one student by database ID
+@app.route('/students/<int:id>')
+def get_student_by_id(id):
+    conn = get_db_connection()
+    student = conn.execute(
+        'SELECT * FROM students WHERE id = ?',
+        (id,)
+    ).fetchone()
+    conn.close()
+
+    if student is None:
+        return jsonify({"error": "Student not found"}), 404
+
+    return jsonify(dict(student))
+
+
+# Additional endpoint: Get students by section
+@app.route('/students/section/<section>')
+def get_students_by_section(section):
+    conn = get_db_connection()
+    students = conn.execute(
+        'SELECT * FROM students WHERE section = ?',
+        (section,)
+    ).fetchall()
+    conn.close()
+
+    return jsonify([dict(student) for student in students])
 
 
 if __name__ == '__main__':
