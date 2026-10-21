@@ -19,7 +19,7 @@ def home():
     return render_template('index.html')
 
 
-# Student API
+# Get one sample student
 @app.route('/student')
 def get_student():
     return jsonify({
@@ -31,7 +31,7 @@ def get_student():
     })
 
 
-# Greeting API
+# Hello endpoint
 @app.route('/hello')
 def say_hello():
     name = request.args.get('name', 'Student')
@@ -40,7 +40,7 @@ def say_hello():
     })
 
 
-# Custom Campus API - Activity 4
+# Campus endpoint
 @app.route('/campus')
 def get_campus():
     return jsonify({
@@ -51,7 +51,7 @@ def get_campus():
     })
 
 
-# Second custom API endpoint - Activity 4
+# Grade endpoint
 @app.route('/grade')
 def get_grade():
     return jsonify({
@@ -65,42 +65,56 @@ def get_grade():
 @app.route('/students')
 def get_students():
     conn = get_db_connection()
+
     students = conn.execute(
         'SELECT * FROM students'
     ).fetchall()
+
     conn.close()
 
     return jsonify([dict(student) for student in students])
 
 
-# Get one student by database ID
+# Get one student by ID
 @app.route('/students/<int:id>')
 def get_student_by_id(id):
     conn = get_db_connection()
+
     student = conn.execute(
         'SELECT * FROM students WHERE id = ?',
         (id,)
     ).fetchone()
+
     conn.close()
 
     if student is None:
-        return jsonify({"error": "Student not found"}), 404
+        return jsonify({
+            "error": "Student not found"
+        }), 404
 
     return jsonify(dict(student))
 
 
-# Additional endpoint: Get students by section
+# Get students by section
+# Accepts uppercase or lowercase section requests
 @app.route('/students/section/<section>')
 def get_students_by_section(section):
     conn = get_db_connection()
+
     students = conn.execute(
         'SELECT * FROM students WHERE section = ?',
-        (section,)
+        (section.upper(),)
     ).fetchall()
+
     conn.close()
 
     return jsonify([dict(student) for student in students])
 
 
+# Run Flask application
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(
+        host='0.0.0.0',
+        port=5000,
+        debug=True
+    )
