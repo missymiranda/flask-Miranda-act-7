@@ -1,10 +1,13 @@
 import sqlite3
 from pathlib import Path
 
-# Database connection
-database_path = Path(__file__).with_name("students.db")
-connection = sqlite3.connect(database_path)
-cursor = connection.cursor()
+# =========================================
+# DATABASE SETUP
+# =========================================
+
+db_path = Path(__file__).with_name("students.db")
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
 
 # Create students table
 cursor.execute("""
@@ -18,9 +21,13 @@ CREATE TABLE IF NOT EXISTS students (
 )
 """)
 
-# Clear existing records
+# Clear previous sample records
 cursor.execute("DELETE FROM students")
-cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'students'")
+
+# Reset auto-increment IDs
+cursor.execute(
+    "DELETE FROM sqlite_sequence WHERE name = 'students'"
+)
 
 # Five sample student records
 students = [
@@ -33,12 +40,13 @@ students = [
 
 # Insert records into the database
 cursor.executemany("""
-INSERT INTO students (student_id, name, program, year, section)
+INSERT INTO students (
+    student_id, name, program, year, section
+)
 VALUES (?, ?, ?, ?, ?)
 """, students)
 
-# Save and close the database
-connection.commit()
-connection.close()
+conn.commit()
+conn.close()
 
 print("Database created successfully.")
